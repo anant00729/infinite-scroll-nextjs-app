@@ -1,65 +1,70 @@
-import Head from "next/head";
-import styles from "../styles/Home.module.css";
+import { MovieContainer, MovieWrapper } from "../styles/Home.styles.js";
+import Header from "../components/header";
+import Movie from "../components/movie-item";
+import useFetchMovieList from "../custom-hooks/useFetchMovieList";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 export default function Home() {
+  const [pageNumber, setPageNumber] = useState(1);
+
+  const { error, loading, movieList, lastPage } = useFetchMovieList(pageNumber);
+
+  const observer = useRef();
+  const lastMovieRefCallback = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && pageNumber <= lastPage - 1) {
+          setPageNumber((prePageNumber) => prePageNumber + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, lastPage]
+  );
+
+  useEffect(() => {
+    setPageNumber(1);
+  }, []);
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "rgba(31, 41, 55, 1)",
+        color: "white",
+        position: "relative",
+      }}
+    >
+      <Header />
+      <MovieWrapper>
+        <MovieContainer>
+          {movieList.map((movie, index) => {
+            const isLast = movieList.length - 1 === index;
+            return (
+              <div key={index} ref={isLast ? lastMovieRefCallback : null}>
+                <Movie movie={movie} />
+              </div>
+            );
+          })}
+        </MovieContainer>
+      </MovieWrapper>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to Anant<a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{" "}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      {loading ? (
+        <div
+          style={{
+            width: "100%",
+            height: "100px",
+            textAlign: "center",
+            marginTop: "16px",
+          }}
         >
-          Powered by{" "}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+          <label style={{ fontSize: "24px" }}>Loading..</label>
+        </div>
+      ) : null}
+
+      <div>{error && `Error occured: ${error.message}`}</div>
     </div>
   );
 }
