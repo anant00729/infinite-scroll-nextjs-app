@@ -1,8 +1,8 @@
 /* Extra small devices (phones, 600px and down) */
-export const XS = "(max-width: 600px)";
+export const XS = "(max-width: 320px)";
 
 /* Small devices (portrait tablets and large phones, 600px and up) */
-export const SM = "(min-width: 600px)";
+export const SM = "(min-width: 650px)";
 
 /* Medium devices (landscape tablets, 768px and up) */
 export const MD = "(min-width: 768px)";
